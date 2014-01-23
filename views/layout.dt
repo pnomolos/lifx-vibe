@@ -1,0 +1,11 @@
+!!! 5
+html
+	head
+		title Example page
+		link(rel='stylesheet', href='/css/main.css')
+		script(src='/js/vendor/modernizr.js')
+		script(src='/js/vendor/jquery.js')
+		script(src='/js/foundation.min.js')
+	body
+		.row
+			block body

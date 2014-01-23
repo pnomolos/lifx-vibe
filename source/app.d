@@ -1,6 +1,16 @@
-import std.stdio;
+import vibe.vibe;
 
 void main()
 {
-	writeln("Edit source/app.d to start your project.");
+	auto settings = new HTTPServerSettings;
+	settings.port = 8080;
+	
+	listenHTTP(settings, &handleRequest);
+	lowerPrivileges();
+	runEventLoop();
+}
+
+void handleRequest(HTTPServerRequest req, HTTPServerResponse res)
+{
+	res.writeBody("Hello, World!");
 }

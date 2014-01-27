@@ -1,4 +1,7 @@
+import lifx_gateway;
+
 import vibe.vibe;
+
 
 void index(HTTPServerRequest req, HTTPServerResponse res)
 {
@@ -7,6 +10,9 @@ void index(HTTPServerRequest req, HTTPServerResponse res)
 
 void main()
 {
+	//auto gateway = new LIFXGateway();
+	//gateway.GetLightState();
+
 	auto settings = new HTTPServerSettings;
 	settings.port = 8080;
 	

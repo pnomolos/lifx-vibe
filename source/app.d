@@ -2,11 +2,6 @@ import lifx_gateway;
 
 import vibe.vibe;
 
-void index(HTTPServerRequest req, HTTPServerResponse res)
-{
-	render!("index.dt")(res);
-}
-
 void main()
 {
 	//auto gateway = new LIFXGateway();

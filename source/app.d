@@ -5,7 +5,6 @@ import vibe.vibe;
 void main()
 {
 	//auto gateway = new LIFXGateway();
-	//gateway.GetLightState();
 
 	auto settings = new HTTPServerSettings;
 	settings.port = 8080;

@@ -1,6 +1,14 @@
 LIFX.Bulb = DS.Model.extend({
-	id: DS.attr('string'),
 	name: DS.attr('string')
 });
 
-LIFX.Bulb.FIXTURES = jQuery.get('/fixtures/bulbs.json');
+LIFX.Bulb.FIXTURES = [
+	{
+		id: 1,
+		name: "Phil's Bulb"
+	},
+	{
+		id: 2,
+		name: "Andrew's Bulb"
+	}
+];

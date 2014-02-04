@@ -7,17 +7,22 @@
 		<script src="/js/vendor/jquery.js"></script>
 		<script src="/js/vendor/foundation.min.js"></script>
 		<script src="/js/vendor/handlebars.js"></script>
-		<script src="/js/vendor/ember.js"></script>
+		<script src="http://builds.emberjs.com/release/ember.js"></script>
+		<!-- <script src="/js/vendor/ember.js"></script> -->
+		<script src="/js/vendor/socket.io.js"></script>
 		<script src="/js/vendor/ember-data.min.js"></script>
+		<script src="/js/vendor/ember-sockets.min.js"></script>
 		<script src="/js/app.js"></script>
-		<script src="/js/router.js"></script>
 		<script src="/js/models/bulb.js"></script>
+		
+		<script src="/js/router.js"></script>
 	</head>
 	<body>
 		<script type="text/x-handlebars" data-template-name="lifx">
 			<div class="row">
 				<section class="small-8 columns">
-					{{render "bulbs" bulbs}}
+				<a href="javascript:void(0);" {{action "cherryPickName"}}>give me another</a>!
+					{{render "bulbs"}}
 				</section>
 				<section class="small-4 columns">
 					Groups &amp; Scripts
@@ -26,10 +31,10 @@
 		</script>
 		<script type="text/x-handlebars" data-template-name="bulbs">
 			<ul id="bulb-list">
-				{{#each itemController="bulb"}}
-					<li>asdf
+				{{#each}}
+					<li>
 						<input type="checkbox" class="toggle">
-						<label>{{name}}</label><button class="destroy"></button>
+						<label>{{name}}</label><button class="destroy">Destroy</button>
 					</li>
 				{{/each}}
 			</ul>

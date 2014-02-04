@@ -1,22 +1,24 @@
 LIFX.Router.map(function() {
-	this.route("lifx", { path: "/" })
+	// this.route("lifx", { path: "/" })
 	this.resource('bulbs', {path: 'bulbs'});
 	this.resource('bulb', {path: 'bulbs/:bulb_id'})
 })
 
 LIFX.IndexRoute = Ember.Route.extend({
-	renderTemplate: function() {
-		this.render('bulbs', {
-			into: 'bulbs'
-		})
-	}
-})
-
-LIFX.BulbsRoute = Ember.Route.extend({
 	setupController: function(controller) {
-		controller.set('model', this.store.get('bulbs'));
+		console.log(this.store.get('bulb'))
+	},
+	renderTemplate: function() {
+		this.render('lifx')
 	}
 })
 
-LIFX.BulbsController = Ember.ArrayController.extend();
+LIFX.BulbsRoute = Ember.Route.extend({});
+
+LIFX.BulbsController = Ember.ArrayController.extend({
+	content: function() {
+		console.log('here');
+		return this.store.findAll(LIFX.Bulb);
+	}.property()
+});
 LIFX.BulbController = Ember.ObjectController.extend();

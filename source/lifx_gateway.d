@@ -4,6 +4,7 @@ import std.stdio;
 import std.c.string; // memcpy
 import std.socket;
 import std.bitmanip;
+import std.format;
 
 import vibe.vibe;
 import vibe.core.connectionpool;
@@ -16,11 +17,11 @@ version(Windows) import std.c.windows.winsock; // Some of the UDP/host resolutio
 private immutable k_udp_discovery_port = 56700;
 private immutable k_packet_buffer_size = 1024;
 
+private alias ubyte[6] BulbAddress;
+
 // All the LIFX stuff is tightly packed w/o padding
 align(1)
 {
-	private alias ubyte[6] BulbAddress;
-
 	private enum PacketType : ushort
 	{
 		get_pan_gateway = 0x02,
@@ -227,9 +228,17 @@ private class LIFXBulb
 	public this(BulbAddress address)
 	{
 		this.address = address;
+
+		// Just use a hex concatenation of the address as our stringified "label"
+		auto writer = appender!string();
+		formattedWrite(writer, "%X%X%X%X%X%X",address[0], address[1], address[2], address[3], address[4], address[5]);
+		id = writer.data;
 	}
 
 	public immutable BulbAddress address;
+
+	public string id;
+	public string label;
 	public bool on;
 }
 
@@ -282,15 +291,20 @@ public class LIFXGateway
 
 		// We spawn one initial connection/fiber to keep track of light state even if no
 		// client fibers are active.
-		runTask(&light_state_task);
+		runTask(&light_receive_task);
 	}
 
-	private void light_state_task()
+	private void light_receive_task()
 	{
 		auto connection = m_connection_pool.lockConnection();
 
 		// TODO: Enumerate bulbs (on some timeout... waitForData?) and create LIFXBulb wrappers for them
 		connection.send_packet(PacketType.get_light_state);
+
+		setTimer(2.seconds, {
+			auto s = get_light_state();
+			writeln(s.toPrettyString());
+		});
 		
 		for (;;)
 		{
@@ -309,13 +323,18 @@ public class LIFXGateway
 					connection.receive_packet(PacketType.light_state, status);
 
 					// Find or create bulb wrapper
-					auto bulb = m_bulbs.get(header.target_address, null);
-					if (!bulb)
-						bulb = new LIFXBulb(header.target_address);
+					auto bulbs = find!"a.address == b"(m_bulbs, header.target_address);
+					if (bulbs.empty)
+					{
+						m_bulbs = m_bulbs ~ new LIFXBulb(header.target_address);
+						bulbs = m_bulbs[$-1..$];
+					}					
+					assert(bulbs.length > 0);
+					auto bulb = bulbs.ptr; // First element
 
 					// Update state
 					bulb.on = (status.power != 0);
-					writefln("Light status: %s", bulb.on);
+					bulb.label = status.bulb_label[0 .. strlen(status.bulb_label.ptr)].idup;
 
 					break;
 
@@ -330,6 +349,12 @@ public class LIFXGateway
 		}
 	}
 
+	public Json get_light_state()
+	{
+		// For now, just return a copy of the shadowed state
+		return serializeToJson(m_bulbs);
+	}
+
 	public ~this()
 	{
 		//	TODO: Stop listening?
@@ -338,5 +363,5 @@ public class LIFXGateway
 	private ConnectionPool!LIFXConnection m_connection_pool;
 
 	// All the bulbs we've seen so far, indexed by address
-	private LIFXBulb[BulbAddress] m_bulbs;
+	private LIFXBulb[] m_bulbs;
 }

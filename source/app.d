@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import std.stdio;
 import lifx_gateway;
 import vibe.vibe;

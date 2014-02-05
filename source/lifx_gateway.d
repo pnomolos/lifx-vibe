@@ -117,7 +117,6 @@ private void decode_payload(T...)(const(ubyte)[] payload, ref T packets)
 // Hacky way until we can do this properly!
 private static auto connect_tcp_address(NetworkAddress address)
 {
-	assert (address.family == AF_INET);
 	string host = std.socket.InternetAddress.addrToString(swapEndian(address.sockAddrInet4().sin_addr.s_addr));
 	return connectTCP(host, address.port);
 }

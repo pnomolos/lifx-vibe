@@ -5,19 +5,19 @@
 		<link rel="stylesheet" href="/css/main.css">
 	</head>
 	
-	<script type="html/todo">
+	<script type="html/bulb">
 		<li id="{id}">
 			<div class="view">
 				<input class="toggle" type="checkbox">
-				<label>{name}</label>
+				<label>{label}</label>
 				<button class="destroy"/>
 			</div>
-			<input class="edit" value="{name}">
 		</li>
 		</script>
 	
 	<body>
-
+		<ul id="bulb-list"></ul>
+		
 		<script src="/js/vendor/modernizr.js"></script>
 		<script src="/js/vendor/jquery.js"></script>
 		<script src="/js/vendor/riot.min.js"></script>

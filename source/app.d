@@ -1,3 +1,4 @@
+import std.stdio;
 import vibe.vibe;
 
 void main()
@@ -6,7 +7,7 @@ void main()
 	settings.port = 8080;
 	
 	auto router = new URLRouter;
-		router.get("/", handleWebSockets(&handleConn));
+		router.get("/socket", handleWebSockets(&handleConn));
 		router.get("/", serveStaticFile("./public/index.html"));
 		router.get("*", serveStaticFiles("./public/"));
 		router.get("*", serveStaticFile("./public/index.html"));
@@ -21,8 +22,7 @@ void handleConn(WebSocket sock)
 	// simple echo server
 	while(sock.connected){
 		auto msg = sock.receiveText();
-		if (msg == "abc") {
-			sock.send(msg);
-		}
+		writeln("Got: " ~ msg);
+		sock.send("{\"msg\": \"" ~ msg ~ "\"}");
 	}
 }

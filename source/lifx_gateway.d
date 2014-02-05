@@ -9,8 +9,6 @@ import std.format;
 import vibe.vibe;
 import vibe.core.connectionpool;
 
-version(Windows) import std.c.windows.winsock; // Some of the UDP/host resolution constants
-
 // Lifx protocol based on reverse engineered documentation from:
 //   https://github.com/magicmonkey/lifxjs/blob/master/Protocol.md
 
@@ -252,7 +250,7 @@ public class LIFXGateway
 		udp.canBroadcast(true);
 
 		// TODO: Fix broadcast address for local subnet
-		auto broadcast_address = resolveHost("255.255.255.255", AF_UNSPEC, false);
+		auto broadcast_address = resolveHost("255.255.255.255");
 		broadcast_address.port = k_udp_discovery_port;
 
 		udp.send(encode_header(PacketType.get_pan_gateway), &broadcast_address);

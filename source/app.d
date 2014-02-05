@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 import std.stdio;
+import lifx_gateway;
 import vibe.vibe;
 
 void main()
 {
+	//auto gateway = new LIFXGateway();
+
 	auto settings = new HTTPServerSettings;
 	settings.port = 8080;
 	

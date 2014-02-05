@@ -300,11 +300,6 @@ public class LIFXGateway
 
 		// TODO: Enumerate bulbs (on some timeout... waitForData?) and create LIFXBulb wrappers for them
 		connection.send_packet(PacketType.get_light_state);
-
-		setTimer(2.seconds, {
-			auto s = get_light_state();
-			writeln(s.toPrettyString());
-		});
 		
 		for (;;)
 		{

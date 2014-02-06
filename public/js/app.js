@@ -1,10 +1,12 @@
 
 /* The presenter */
 
+var connection = null;
+
 -function() { 'use strict';
 	window.bulb = new Bulb();
 	
-	var connection = new WebSocket('ws://localhost:8080/socket');
+	connection = new WebSocket('ws://localhost:8080/socket');
 	
 	// Log errors
 	connection.onerror = function (error) {
@@ -31,11 +33,18 @@
 	var template = $("[type='html/bulb']").html(),
 		root = $('#bulb-list');
 	
-	bulb.on("add", add);
+	bulb
+		.on("add", add)
+		.on("replace", replace)
+	;
 	
 	// Private
 	function add(bulb) {
 		console.log(bulb);
 		var el = $($.render(template, bulb)).appendTo(root);
+	}
+	
+	function replace(bulb) {
+		var el = $('#' + bulb.id).replaceWith($.render(template, bulb));
 	}
 }()

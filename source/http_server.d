@@ -32,14 +32,20 @@ class HTTPServer
 
 	private void handleConn(WebSocket socket)
 	{
+		// TODO: Register ourselves for the various broadcasts
+		// Perhaps means we should break out as a separate object too, we'll see
+
 		while (socket.connected)
 		{
-			auto msg = socket.receiveText();
-			writeln("Got: " ~ msg);
+			auto packet_string = socket.receiveText();
+			//writeln("Got: " ~ packet_string);
+			auto packet = parseJsonString(packet_string);
 
-			// TODO: switch(type), etc.
-			socket.send(encode_packet("light_state", m_gateway.get_light_state()));
-			//writeln(encode_packet("light_state", m_gateway.get_light_state()));
+			// TODO: We could do some sort of hashed dispatch to delegates... MEH for now
+			if (packet.message == "get_light_state")
+			{
+				socket.send(encode_packet("light_state", m_gateway.get_light_state()));	
+			}
 		}
 	}
 

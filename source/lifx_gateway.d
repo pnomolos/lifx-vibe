@@ -130,11 +130,15 @@ private class LIFXConnection
 	public this(NetworkAddress address, BulbAddress gateway_address)
 	{
 		m_read_packet_header_valid = false;
+		m_address = address;
 		m_gateway_address = gateway_address;
-		m_connection = connect_tcp_address(address);
 
+		//m_connection = connect_tcp_address(address);
 		// Disable waiting to combine small packets - latency is key here, not overhead
-		m_connection.tcpNoDelay = true;
+		//m_connection.tcpNoDelay = true;
+
+		// TODO: Could bind to gateway address, but LIFX seems to send some stuff over broadcast and not directed
+		m_connection = listenUDP(k_udp_discovery_port);
 	}
 
 	// TODO: Make some decisions about GC memory, etc.
@@ -163,7 +167,8 @@ private class LIFXConnection
 			write_index += p.sizeof;
 		}
 
-		m_connection.write(payload);
+		//m_connection.write(payload);
+		m_connection.send(payload, &m_address);
 	}
 
 	// Convenience
@@ -176,13 +181,19 @@ private class LIFXConnection
 	{
 		if (!m_read_packet_header_valid)
 		{
+			/*
 			ubyte[PacketHeader.sizeof] buffer;
 			m_connection.read(buffer);
+			*/
+
+			auto buffer = m_connection.recv(m_read_packet_buffer);
+
 			m_read_packet_header = decode_header(buffer);
 			m_read_packet_header_valid = true;
 
 			// Some basic consistency checks...
-			enforce(m_read_packet_header.size >= PacketHeader.sizeof, "Invalid packet size");
+			//enforce(m_read_packet_header.size >= PacketHeader.sizeof, "Invalid packet size");
+			enforce(m_read_packet_header.size == buffer.length, "Invalid packet size");
 		}
 
 		return m_read_packet_header;
@@ -193,8 +204,9 @@ private class LIFXConnection
 		peek_packet_header();
 		size_t payload_length = m_read_packet_header.size - PacketHeader.sizeof;
 
-		auto read_buffer = new ubyte[payload_length];
-		m_connection.read(read_buffer);
+		//auto read_buffer = new ubyte[payload_length];
+		//m_connection.read(read_buffer);
+		auto read_buffer = m_read_packet_buffer[PacketHeader.sizeof .. m_read_packet_header.size];
 
 		// Indicate that we're ready to move on to the next packet
 		m_read_packet_header_valid = false;
@@ -212,10 +224,14 @@ private class LIFXConnection
 
 
 	private BulbAddress m_gateway_address;
-	private TCPConnection m_connection;
+	//private TCPConnection m_connection;
+
+	private NetworkAddress m_address;
+	private UDPConnection m_connection;
 
 	private PacketHeader m_read_packet_header;
 	private bool m_read_packet_header_valid;
+	private ubyte[k_packet_buffer_size] m_read_packet_buffer;
 }
 
 
@@ -228,7 +244,7 @@ private class LIFXBulb
 
 		// Just use a hex concatenation of the address as our stringified "label"
 		auto writer = appender!string();
-		formattedWrite(writer, "%X%X%X%X%X%X",address[0], address[1], address[2], address[3], address[4], address[5]);
+		formattedWrite(writer, "%X%X%X%X%X%X", address[0], address[1], address[2], address[3], address[4], address[5]);
 		id = writer.data;
 	}
 
@@ -270,7 +286,7 @@ public class LIFXGateway
 				GatewayResponse response;
 				decode_payload(packet[PacketHeader.sizeof..$], response);
 
-				if (response.service == GatewayService.TCP)
+				if (response.service == GatewayService.UDP)
 				{
 					// Looks good, we'll use it!
 					gateway_network_address.port = cast(ushort)response.port;

@@ -8,10 +8,11 @@
 	</head>
 	
 	<script type="html/bulb">
-		<li class="bulb" id="{id}">
+		<li class="bulb list-group-item power-{power_state}" id="{id}">
 			<div class="view">
-				<label>{label}</label>
-				<button type="button" class="btn btn-primary power power-{power_state}">Power</button>
+				<span class="badge">{power_state}</span>
+				{label}
+				<button type="button" class="btn btn-primary power">Toggle Power</button>
 			</div>
 		</li>
 	</script>
@@ -20,7 +21,7 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-xs-6">
-					<ul id="bulb-list"></ul>
+					<ul id="bulb-list" class="list-group"></ul>
 				</div>
 				<div class="col-xs-6">
 				</div>

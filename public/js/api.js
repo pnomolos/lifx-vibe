@@ -32,7 +32,6 @@ function Bulb(connection) {
 	}
 	
 	self.add = function(bulb) {
-		console.log("Adding bulb");
 		replace = false;
 		if (bulbs[bulb.id]) {
 			replace = true;
@@ -43,7 +42,13 @@ function Bulb(connection) {
 	}
 	
 	self.toggle_power = function(id) {
-		connection.send('{"message": "toggle_power", "params": {"id": "' + id + '"}}');
-		connection.send('{"message": "get_light_state", "payload": null}');
+		connection.send(JSON.stringify({
+			message: 'togger_power',
+			params: { id: id }
+		}));
+		connection.send(JSON.stringify({
+			message: 'get_light_state',
+			params: null
+		}));
 	}
 }

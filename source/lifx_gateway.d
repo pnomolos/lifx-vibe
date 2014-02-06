@@ -246,7 +246,7 @@ private class LIFXBulb
 
 	public string id;
 	public string label;
-	public bool on;
+	public bool power;
 }
 
 
@@ -313,7 +313,7 @@ public class LIFXGateway
 				case PacketType.light_state:
 					// New light?
 					// Test: Turn it off!
-					//m_connection.send_packet(PacketType.set_power_state, header.target_address, PowerState.ON);
+					//
 
 					LightStatus status;
 					m_connection.receive_packet(PacketType.light_state, status);
@@ -329,9 +329,17 @@ public class LIFXGateway
 					auto bulb = bulbs.ptr; // First element
 
 					// Update state
-					bulb.on = (status.power != 0);
+					bulb.power = (status.power != 0);
 					bulb.label = status.bulb_label[0 .. strlen(status.bulb_label.ptr)].idup;
 
+					writefln("Bulb %s power %s from %s", bulb.id, bulb.power, status.power);
+
+					break;
+
+				case PacketType.power_state:
+					// Just get it to send the whole state back
+					m_connection.send_packet(PacketType.get_light_state, header.target_address);
+					m_connection.receive_packet_payload(); // Discard payload
 					break;
 
 				default:
@@ -343,6 +351,14 @@ public class LIFXGateway
 			// TODO: Trigger broadcast new state to clients
 			// Probably okay to always do this whenever we process a new packet, regardless of if it has changed
 		}
+	}
+
+	// TODO: This is undesirable long-term... figure out a better way to handle id vs address
+	public void toggle_power(string id)
+	{
+		auto bulbs = find!"a.id == b"(m_bulbs, id);
+		if (!bulbs.empty)
+			m_connection.send_packet(PacketType.set_power_state, bulbs[0].address, bulbs[0].power ? PowerState.OFF : PowerState.ON);
 	}
 
 	public Json get_light_state()

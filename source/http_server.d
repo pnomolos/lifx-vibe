@@ -38,13 +38,18 @@ class HTTPServer
 		while (socket.connected)
 		{
 			auto packet_string = socket.receiveText();
-			//writeln("Got: " ~ packet_string);
+			writeln("Websockets: " ~ packet_string);
 			auto packet = parseJsonString(packet_string);
 
 			// TODO: We could do some sort of hashed dispatch to delegates... MEH for now
 			if (packet.message == "get_light_state")
 			{
 				socket.send(encode_packet("light_state", m_gateway.get_light_state()));	
+			}
+			else if (packet.message == "toggle_power")
+			{
+				writeln("Toggling light power state!");
+				m_gateway.toggle_power(packet.params["id"].get!string);
 			}
 		}
 	}

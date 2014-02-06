@@ -46,6 +46,10 @@ class HTTPServer
 			{
 				socket.send(encode_packet("light_state", m_gateway.get_light_state()));	
 			}
+			else if (packet.message == "toggle_power")
+			{
+				m_gateway.toggle_power(packet.params["id"].get!string);
+			}
 		}
 	}
 

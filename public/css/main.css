@@ -1,2 +1,5 @@
 @import url(foundation.css);
-@import url(normalize.css);
+
+.power-off {
+	background: #000;
+}

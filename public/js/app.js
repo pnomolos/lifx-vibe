@@ -4,34 +4,16 @@
 var connection = null;
 
 -function() { 'use strict';
-	window.bulb = new Bulb();
+	connection = new WebSocket('ws://10.0.0.100:8080/socket');
 	
-	connection = new WebSocket('ws://localhost:8080/socket');
-	
-	// Log errors
-	connection.onerror = function (error) {
-		console.log('WebSocket Error ' + error);
-	};
-	
-	connection.onopen = function () {
-		console.log("Opening connection");
-		connection.send('{"message": "get_light_state", "payload": null}');
-	};
-	
-	connection.onmessage = function (e) {
-		var resp = JSON.parse(e.data);
-		console.log(resp);
-		switch (resp.message) {
-			case 'light_state':
-				$.each(resp.params, function(){
-					window.bulb.add(this);
-				})
-				break;
-		}
-	};
+	window.bulb = new Bulb(connection);
 	
 	var template = $("[type='html/bulb']").html(),
 		root = $('#bulb-list');
+	
+	$(document).on('click', '.power', function() {
+		bulb.toggle_power($(this).parents('.bulb').attr('id'));
+	})
 	
 	bulb
 		.on("add", add)

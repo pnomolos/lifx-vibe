@@ -4,7 +4,11 @@ function Bulb() {
 	
 	self.add = function(bulb) {
 		console.log("Adding bulb");
+		replace = false;
+		if (bulbs[bulb.id]) {
+			replace = true;
+		}
 		bulbs[bulb.id] = bulb;
-		self.trigger('add', bulb);
+		self.trigger(replace ? 'replace' : 'add', bulb);
 	}
 }

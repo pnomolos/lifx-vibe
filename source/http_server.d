@@ -38,7 +38,7 @@ class HTTPServer
 		while (socket.connected)
 		{
 			auto packet_string = socket.receiveText();
-			//writeln("Got: " ~ packet_string);
+			writeln("Websockets: " ~ packet_string);
 			auto packet = parseJsonString(packet_string);
 
 			// TODO: We could do some sort of hashed dispatch to delegates... MEH for now

@@ -332,6 +332,14 @@ public class LIFXGateway
 					bulb.power = (status.power != 0);
 					bulb.label = status.bulb_label[0 .. strlen(status.bulb_label.ptr)].idup;
 
+					writefln("Bulb %s power %s from %s", bulb.id, bulb.power, status.power);
+
+					break;
+
+				case PacketType.power_state:
+					// Just get it to send the whole state back
+					m_connection.send_packet(PacketType.get_light_state, header.target_address);
+					m_connection.receive_packet_payload(); // Discard payload
 					break;
 
 				default:

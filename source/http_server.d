@@ -48,6 +48,7 @@ class HTTPServer
 			}
 			else if (packet.message == "toggle_power")
 			{
+				writeln("Toggling light power state!");
 				m_gateway.toggle_power(packet.params["id"].get!string);
 			}
 		}

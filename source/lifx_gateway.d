@@ -127,18 +127,12 @@ private static auto connect_tcp_address(NetworkAddress address)
 // Used with a connection pool to avoid mixing communication from different clients.
 private class LIFXConnection
 {
-	public this(NetworkAddress address, BulbAddress gateway_address)
+	public this(UDPConnection connection, NetworkAddress address, BulbAddress gateway_address)
 	{
 		m_read_packet_header_valid = false;
 		m_address = address;
 		m_gateway_address = gateway_address;
-
-		//m_connection = connect_tcp_address(address);
-		// Disable waiting to combine small packets - latency is key here, not overhead
-		//m_connection.tcpNoDelay = true;
-
-		// TODO: Could bind to gateway address, but LIFX seems to send some stuff over broadcast and not directed
-		m_connection = listenUDP(k_udp_discovery_port);
+		m_connection = connection;
 	}
 
 	// TODO: Make some decisions about GC memory, etc.
@@ -261,13 +255,12 @@ public class LIFXGateway
 	public this()
 	{
 		// Bulb discovery is done by sending a UDP broadcast and listening for a reply
-		auto udp = listenUDP(k_udp_discovery_port, "0.0.0.0");
-		udp.canBroadcast(true);
-
 		// TODO: Fix broadcast address for local subnet
 		auto broadcast_address = resolveHost("255.255.255.255");
 		broadcast_address.port = k_udp_discovery_port;
-
+		
+		auto udp = listenUDP(k_udp_discovery_port, "0.0.0.0");
+		udp.canBroadcast(true);
 		udp.send(encode_header(PacketType.get_pan_gateway), &broadcast_address);
 
 		NetworkAddress gateway_network_address;
@@ -296,11 +289,8 @@ public class LIFXGateway
 				}
 			}
 		}
-		
-		m_connection_pool = new ConnectionPool!LIFXConnection({
-			writeln("Added new connection to pool.");
-			return new LIFXConnection(gateway_network_address, gateway_address);
-		});
+
+		m_connection = new LIFXConnection(udp, gateway_network_address, gateway_address);
 
 		// We spawn one initial connection/fiber to keep track of light state even if no
 		// client fibers are active.
@@ -309,15 +299,13 @@ public class LIFXGateway
 
 	private void light_receive_task()
 	{
-		auto connection = m_connection_pool.lockConnection();
-
 		// TODO: Enumerate bulbs (on some timeout... waitForData?) and create LIFXBulb wrappers for them
-		connection.send_packet(PacketType.get_light_state);
+		m_connection.send_packet(PacketType.get_light_state);
 		
 		for (;;)
 		{
 			// TODO: Timeout/wait for data and send a new get_light_state if hit
-			auto header = connection.peek_packet_header();
+			auto header = m_connection.peek_packet_header();
 			writefln("Received type %s!", header.packet_type);
 			
 			switch (header.packet_type)
@@ -325,10 +313,10 @@ public class LIFXGateway
 				case PacketType.light_state:
 					// New light?
 					// Test: Turn it off!
-					//connection.send_packet(PacketType.set_power_state, header.target_address, PowerState.ON);
+					//m_connection.send_packet(PacketType.set_power_state, header.target_address, PowerState.ON);
 
 					LightStatus status;
-					connection.receive_packet(PacketType.light_state, status);
+					m_connection.receive_packet(PacketType.light_state, status);
 
 					// Find or create bulb wrapper
 					auto bulbs = find!"a.address == b"(m_bulbs, header.target_address);
@@ -348,7 +336,7 @@ public class LIFXGateway
 
 				default:
 					writefln("Unhandled packet type %s!", header.packet_type);
-					connection.receive_packet_payload(); // Discard
+					m_connection.receive_packet_payload(); // Discard
 					break;
 			}
 
@@ -368,7 +356,7 @@ public class LIFXGateway
 		//	TODO: Stop listening?
 	}
 
-	private ConnectionPool!LIFXConnection m_connection_pool;
+	private LIFXConnection m_connection;
 
 	// All the bulbs we've seen so far, indexed by address
 	private LIFXBulb[] m_bulbs;
